@@ -1,0 +1,1184 @@
+1. buat folder projek
+
+2. buka vscode
+
+3. buat folder ci4 via terminal dengan mengetik
+    - composer create-project codeigniter4/appstarter nama_file
+
+4. masuk ke folder yang baru dibuat 
+
+5. run dengan menggunakan "php spark serve"
+
+6. klik link localhost yang diberikan di terminal
+
+7. buat file dalam views
+
+8. mengubah isi dari function index pada controller home agar menampilkan isi dari file yang telah dibuat tadi
+    public function index(): string
+    {
+        return view('v_home');
+    }
+
+9. menambahkan router baru
+    $routes->get('/produk', 'ProdukController::index');
+    $routes->get('/keranjang', 'TransaksiController::index');
+
+10. membuat 2 controller baru 
+    php spark make:controller ProdukController
+    php spark make:controller TransaksiController
+
+11. ubah isi controller agar mengarahkan ke file yang di tuju
+
+// Layout
+12. download NiceAdmin di https://drive.google.com/file/d/1VwpEmBEcu0HccuoZG7h3HoKooIonZZ7H/view?usp=sharing
+
+13. ekstrak ke dalam folder projek (tepatnya di dalam folder public ci)
+
+14. buat file baru di dalam folder views bernama layout.php
+
+15. buat folder baru bernama components lalu buat file header.php, sidebar.php, footer.php di dalamnya
+
+16. copy isi file dari D:\Kuliah\dokumen belajar\Semester 4\PBW Lanjut\Projek_CI\Projek-ci\public\NiceAdmin\tables-data.html ke file layout.php
+
+17. pada file layout lakukan :
+    - cut baris header (43 - 270) ke file header.php 
+    - cut baris sidebar (272 - 507) ke file sidebar.php 
+    - cut baris footer (591 - 603) ke file footer.php 
+    - cut baris table (531 - 580) ke file v_home.php 
+
+18. pada file layout tambahkan :
+    - <?= $this->include('components/header') ?> pada letak/baris (line 43) header yang tadi 
+    - <?= $this->include('components/sidebar') ?> pada letak/baris (line 45) sidebar yang tadi
+    - <?= $this->include('components/footer') ?> pada letak/baris (line 80) footer yang tadi
+    - <?= $this->renderSection('content') ?> pada letak/baris (69) table yang tadi
+
+19. mengubah nama toko pada :
+    - file header.php (line 7)
+    - file footer.php (line 4)
+
+20. menambahkan code di file v_home.php
+    - pada baris paling awal 
+      <?= $this->extend('layout') ?>
+      <?= $this->section('content') ?>
+    - pada baris terakhir 
+      <?= $this->endSection() ?>
+
+21. mengaktifkan helper pada file app/config/Autoload.php pada line 92, lalu ketik 'url' didalam arraynya
+
+22. menambahkan code pada baris paling atas file layout.php
+    <?php
+        $hlm = "Home";
+        if(uri_string()!=""){
+            $hlm = ucwords(uri_string());
+        }
+    ?>
+
+23. ganti baris tittle menjadi 
+    <title>- Toko - <?php echo $hlm ?></title>
+
+24. pada line breadcrumb ganti dengan 
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">Home</li>
+        <?php
+            if($hlm!="Home"){
+        ?>
+        <li class="breadcrumb-item"><?php echo $hlm?></li> 
+        <?php
+        }
+        ?> 
+    </ol>
+
+25. pada card body (line 76) ubah jadi 
+    <div class="card-body">
+        <h5 class="card-title"><?php echo $hlm?></h5>
+        <?= $this->renderSection('content') ?>
+    </div>
+
+26. menambahkan code di file v_keranjang.php dan v_produk
+    - pada baris paling awal 
+      <?= $this->extend('layout') ?>
+      <?= $this->section('content') ?>
+    - pada baris terakhir 
+      <?= $this->endSection() ?>
+
+// session
+27. buka file header.php cari code yang menampilkan sign out, ganti href yang tadinya "#" menjadi "logout"
+
+28. masih pada file header.php ganti K. Anderson dengan 
+    <?= session()->get('username'); ?> (<?= session()->get('role'); ?>)
+
+29. buat file baru bernama layout_clear.php di folder views
+
+30. hapus bagian link yang mengarahkan ke header.php, sidebar.php, footer.php, sisakan isi dalam tag main itu untuk render contentnya saja
+
+31. hapus juga bagian id dan class pada tag main (line 50)
+
+32. buat file baru (v_login.php) untuk login lalu
+    - buka file page-login.html pada folder NiceAdmin
+    - copy baris ke 46 - 113 ke file (v_login.php) untuk login yang sudah dibuat tadi
+    - tambahkan code pada file (v_login.php) untuk login yang sudah dibuat
+        - di baris paling atas 
+          <?= $this->extend('layout_clear') ?>
+          <?= $this->section('content') ?>
+        - di baris paling bawah
+          <?= $this->endSection() ?>
+    - mengganti isi line logo dan nama toko menjadi
+      <img src="<?php echo base_url() ?>NiceAdmin/assets/img/logo.png" alt="">
+      <span class="d-none d-lg-block">Toko</span>
+    - menambahkan code dibawah baris awal section (paling atas)
+      <?php
+        $username = [
+            'name' => 'username',
+            'id' => 'username',
+            'class' => 'form-control'
+        ];
+
+        $password = [
+            'name' => 'password',
+            'id' => 'password',
+            'class' => 'form-control'
+        ];
+      ?>
+    - menambahkan code pada sebelum tag form 
+      <?php
+        if (session()->getFlashData('failed')) {
+      ?>
+        <div class="col-12 alert alert-danger" role="alert">
+            <hr>
+            <p class="mb-0">
+                <?= session()->getFlashData('failed') ?>
+            </p>
+        </div>
+      <?php
+      }
+      ?>
+    - mengubah isi dari tag pembuka form hingga tag penutup form dengan 
+      <?= form_open('login', 'class = "row g-3 needs-validation"') ?>
+
+        <div class="col-12">
+            <label for="yourUsername" class="form-label">Username</label>
+            <div class="input-group has-validation">
+                <span class="input-group-text" id="inputGroupPrepend">@</span>
+                <?= form_input($username) ?>
+                <div class="invalid-feedback">Please enter your username.</div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <label for="yourPassword" class="form-label">Password</label>
+                    <?= form_password($password) ?>
+            <div class="invalid-feedback">Please enter your password!</div>
+        </div>
+        <div class="col-12">
+            <?= form_submit('submit', 'Login', ['class' => 'btn btn-primary w-100']) ?>
+        </div>
+
+      <?= form_close() ?>
+33. membuat AuthController via terminal
+    php spark make:controller AuthController
+
+34. ubah isi AuthController menjadi 
+    - ganti fungsi index dengan 
+      function __construct()
+      {
+        helper('form');
+      }
+    - menambahkan fungsi login 
+      public function login()
+      {
+            if ($this->request->getPost()) {
+                $username = $this->request->getVar('username');
+                $password = $this->request->getVar('password');
+
+                $dataUser = ['username' => 'april', 'password' => '202cb962ac59075b964b07152d234b70', 'role' => 'admin']; // passw 123
+
+                if ($username == $dataUser['username']) {
+                    if (md5($password) == $dataUser['password']) {
+                        session()->set([
+                            'username' => $dataUser['username'],
+                            'role' => $dataUser['role'],
+                            'isLoggedIn' => TRUE
+                        ]);
+
+                        return redirect()->to(base_url('/'));
+                    } else {
+                        session()->setFlashdata('failed', 'Username & Password Salah');
+                        return redirect()->back();
+                    }
+                } else {
+                    session()->setFlashdata('failed', 'Username Tidak Ditemukan');
+                    return redirect()->back();
+                }
+            } else {
+                return view('v_login');
+            }
+      }
+    - menambahkan fungsi logout
+      public function logout()
+      {
+        session()->destroy();
+        return redirect()->to('login');
+      }
+
+35. menambahkan isi routes dengan 
+    - $routes->get('login', 'AuthController::login'); 
+      // untuk menampilkan / mengarahkan ke halaman login
+    - $routes->post('login', 'AuthController::login');
+      // untuk mengirim data user yang di inputkan 
+    - $routes->get('logout', 'AuthController::logout');
+      // untuk mengakhiri sesi
+
+// filter
+36. buka file sidebar.php 
+    - hapus bagian setelah baris end dashboard nav hingga baris end blank page nav
+    - copy bagian tag <li> 2x
+    - ganti bagian nama "dashboard" dengan menu yang diperlukan
+    - ubah value href sesuai dengan routes tujuannya
+    - agar saat halaman yang sedang aktif agar terhighlight pada sidebarnya maka ubah "collapse" (hanya kata collapse) menjadi
+      - untuk yang home : <?php echo (uri_string() == 'home') ? "" : "collapsed" ?> 
+      - untuk yang keranjang : <?php echo (uri_string() == 'keranjang') ? "" : "collapsed" ?> 
+      - untuk yang produk : <?php echo (uri_string() == 'produk') ? "" : "collapsed" ?>
+    - untuk mengatur agar hanya tampil untuk admin maka tambahkan code  
+      - diatas / awal code untuk navigasi produk 
+        <?php
+        if (session()->get('role') == 'admin') {
+        ?> 
+      - dibawah code navigasi produk
+        <?php
+        }
+        ?>
+
+37. membuat filter (Auth.php) via terminal
+    php spark make:filter Auth
+
+38. buka file tilter auth dan ganti isinya dengan 
+    public function before(RequestInterface $request, $arguments = null)
+    {
+        // Do something here
+        if (!session()->has('isLoggedIn')) {
+            return redirect()->to(site_url('login'));
+        }
+    }
+
+    //--------------------------------------------------------------------
+
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    {
+        // Do something here
+    }
+
+39. buka file app/Config/Filter.php, lalu tambahkan code di dalam (tambahkan di paling bawah) array variable $aliases 
+    'auth' => \App\Filters\Auth::class
+
+40. buka file app/Config/Routes.php, lalu pada akhir router home, keranjang, produk tambahkan 
+    ['filter' => 'auth']
+        - $routes->get('/home', 'Home::home', ['filter' => 'auth']);
+        - $routes->get('/produk', 'ProdukController::Produk', ['filter' => 'auth']);
+        - $routes->get('/keranjang', 'TransaksiController::Keranjang', ['filter' => 'auth']);
+
+
+// migration dan seeding
+
+41. hidupkan xamppnya (apache dan mysql) 
+
+42. login localhost lalu buat database dengan nama yang diinginkan
+
+43. membuat migration (table) via terminal dengan 
+    - php spark make:migration user
+    - php spark make:migration product
+    - php spark make:migration transaction
+    - php spark make:migration transaction_detail
+
+44. isi file migration user.php dengan 
+    public function up()
+    {
+        $this->forge->addField([
+            'id' => [
+                'type' => 'INT',
+                'unsigned' => TRUE,
+                'auto_increment' => TRUE
+            ],
+            'username' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'null' => FALSE,
+                'unique' => TRUE,
+            ],
+            'email' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'null' => FALSE,
+                'unique' => TRUE,
+            ],
+            'password' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'null' => FALSE,
+            ],
+            'role' => [
+                'type' => 'VARCHAR',
+                'constraint' => 50,
+                'null' => FALSE,
+            ],
+            'created_at' => [
+                'type' => 'datetime',
+                'null' => TRUE
+            ],
+            'updated_at' => [
+                'type' => 'datetime',
+                'null' => TRUE
+            ]
+        ]);
+
+        $this->forge->addKey('id', TRUE);
+        $this->forge->createTable('user');
+    }
+
+    //--------------------------------------------------------------------
+
+    public function down()
+    {
+        $this->forge->dropTable('user');
+    }
+
+45. isi file migration product.php dengan 
+    public function up()
+    {
+        $this->forge->addField([
+            'id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => TRUE,
+                'auto_increment' => TRUE
+            ],
+            'nama' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'null' => FALSE,
+            ],
+            'harga' => [
+                'type' => 'DOUBLE',
+                'null' => FALSE,
+            ],
+            'jumlah' => [
+                'type' => 'INT',
+                'constraint' => 5,
+                'null' => FALSE,
+            ],
+            'foto' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+            ],
+            'created_at' => [
+                'type' => 'datetime',
+                'null' => TRUE
+            ],
+            'updated_at' => [
+                'type' => 'datetime',
+                'null' => TRUE
+            ]
+        ]);
+
+        $this->forge->addKey('id', TRUE);
+        $this->forge->createTable('product');
+    }
+
+    //--------------------------------------------------------------------
+
+    public function down()
+    {
+        $this->forge->dropTable('product');
+    }
+
+46. isi file migration transaction dengan 
+    public function up()
+    {
+        $this->forge->addField([
+            'id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => TRUE,
+                'auto_increment' => TRUE
+            ],
+            'username' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255,
+                'null' => FALSE,
+            ],
+            'total_harga' => [
+                'type' => 'DOUBLE',
+                'null' => FALSE,
+            ],
+            'alamat' => [
+                'type' => 'TEXT',
+                'null' => FALSE,
+            ],
+            'ongkir' => [
+                'type' => 'DOUBLE',
+                'null' => TRUE
+            ],
+            'status' => [
+                'type' => 'INT',
+                'constraint' => 1,
+                'null' => FALSE,
+            ],
+            'created_at' => [
+                'type' => 'datetime',
+                'null' => TRUE
+            ],
+            'updated_at' => [
+                'type' => 'datetime',
+                'null' => TRUE
+            ]
+        ]);
+
+        $this->forge->addKey('id', TRUE);
+        $this->forge->createTable('transaction');
+    }
+
+    public function down()
+    {
+        $this->forge->dropTable('transaction');
+    }
+
+47. isi file transaction_detail dengan
+    public function up()
+    {
+        $this->forge->addField([
+            'id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => TRUE,
+                'auto_increment' => TRUE
+            ],
+            'transaction_id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => TRUE,
+            ],
+            'product_id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => TRUE,
+            ],
+            'jumlah' => [
+                'type' => 'INT',
+                'constraint' => 5,
+                'null' => FALSE,
+            ],
+            'diskon' => [
+                'type' => 'DOUBLE',
+                'null' => TRUE,
+            ],
+            'subtotal_harga' => [
+                'type' => 'DOUBLE',
+                'null' => FALSE,
+            ],
+            'created_at' => [
+                'type' => 'datetime',
+                'null' => TRUE
+            ],
+            'updated_at' => [
+                'type' => 'datetime',
+                'null' => TRUE
+            ]
+        ]);
+
+        $this->forge->addKey('id', TRUE);
+        $this->forge->createTable('transaction_detail');
+    }
+
+    public function down()
+    {
+        $this->forge->dropTable('transaction_detail');
+    }
+
+48. lakukan save / upload isi tabel via terminal dengan cara 
+    php spark migrate
+
+49. buat seeder via terminal dengan cara :
+    - php spark make:seeder ProductSeeder
+    - php spark make:seeder UserSeeder
+
+50. isi ProductSeeder dengan code berikut
+    public function run()
+    {
+        // membuat data
+        $data = [
+            [
+                'nama' => 'ASUS TUF A15 FA506NF',
+                'harga'  => 10899000,
+                'jumlah' => 5,
+                'foto' => 'asus_tuf_a15.jpg',
+                'created_at' => date("Y-m-d H:i:s"),
+            ],
+            [
+                'nama' => 'Asus Vivobook 14 A1404ZA',
+                'harga'  => 6899000,
+                'jumlah' => 7,
+                'foto' => 'asus_vivobook_14.jpg',
+                'created_at' => date("Y-m-d H:i:s"),
+            ],
+            [
+                'nama' => 'Lenovo IdeaPad Slim 3-14IAU7',
+                'harga'  => 6299000,
+                'jumlah' => 5,
+                'foto' => 'lenovo_idepad_slim_3.jpg',
+                'created_at' => date("Y-m-d H:i:s"),
+            ]
+        ];
+
+        foreach ($data as $item) {
+            // insert semua data ke tabel
+            $this->db->table('product')->insert($item);
+        }
+    }
+
+51. ketik di terminal untuk upload seed yang sudah dibuat
+    php spark db:seed ProductSeeder
+
+52. isi UserSeeder dengan code berikut
+    public function run()
+    {
+        $faker = \Faker\Factory::create('id_ID');
+
+        for ($i = 0; $i < 10; $i++) {
+            $data = [
+                'username' => $faker->userName,
+                'email' => $faker->email,
+                'password' => password_hash('1234567', PASSWORD_DEFAULT),
+                'role' => $faker->randomElement(['admin', 'guest']),
+                'created_at' => date("Y-m-d H:i:s"),
+            ];
+            //print_r($data);
+            $this->db->table('user')->insert($data);
+        }
+    }
+
+53. ketik di terminal untuk upload seed yang sudah dibuat
+    php spark db:seed UserSeeder
+
+// Read and Data validation
+54. buka xampp lalu login dan cek apakah database dan isinya sudah Autoload
+
+55. buat model via terminal dengan cara ketik 
+    php spark make:model ProductModel
+
+56. buka file ProductModel lalu ganti code pada bagian 
+    protected $table = 'product'; 
+	protected $primaryKey = 'id';
+	protected $allowedFields = [
+		'nama','harga','jumlah','foto','created_at','updated_at'
+	]; 
+57. buka file home.php lalu ubah bagian
+    - use App\Model\ProductModel; (tambahkan dibawah code namespace paling atas)
+    - pada bagian isinya diganti
+      protected $product;
+
+      function __construct()
+      {
+          $this->product = new ProductModel();
+      }
+
+      public function home(): string
+      {
+          $product = $this->product->findAll();
+          $data['product'] = $product;
+
+          return view('v_home', $data);
+      }
+
+58. buka file v_home.php lalu ubah bagian table dengan
+    <div class="row">
+    <?php foreach ($product as $key => $item) : ?>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <img src="<?php echo base_url() . "img/" . $item['foto'] ?>" alt="..." width="100%">
+                    <h5 class="card-title"><?php echo $item['nama'] ?><br><?php echo $item['harga'] ?></h5>
+                </div>
+            </div>
+        </div>
+    <?php endforeach ?>
+    </div>
+
+59. buat folder img didalam folder public 
+
+60. simpan gambar yang dibutuhkan didalam folder tersebut, nama folder disesuaikan dengan nama yang ada di database
+
+61. buat table user dengan menggunakan model via terminal dengan : 
+    php spark make:model UserModel
+
+62. buka file ProductModel lalu ganti code pada bagian
+    protected $table = 'user';
+    protected $primaryKey = 'id';
+    protected $allowedFields = [
+        'username', 'email', 'password', 'role', 'created_at', 'updated_at'
+    ];
+
+63. buka file AuthController.php lalu ubah bagian
+    - tambahkan dibawah code use yang berada diawal file
+      use App\Models\UserModel;
+    - tambahkan code di dalam function __construct
+      $this->user = new UserModel(); 
+    - ganti variable datauser yang ada dengan 
+      $dataUser = $this->user->where(['username' => $username])->first(); // passw 1234567 
+    - ubah statement if yang awal dengan 
+      if ($dataUser) {
+	    if (password_verify($password, $dataUser['password'])) {
+
+64. ubah method login pada AuthController.php menjadi 
+    public function login()
+    {
+    if ($this->request->getPost()) {
+        $rules = [
+            'username' => 'required|min_length[6]',
+            'password' => 'required|min_length[7]|numeric',
+        ];
+
+        if ($this->validate($rules)) {
+            $username = $this->request->getVar('username');
+            $password = $this->request->getVar('password');
+
+            $dataUser = $this->user->where(['username' => $username])->first(); //pasw 1234567
+
+            if ($dataUser) {
+                if (password_verify($password, $dataUser['password'])) {
+                    session()->set([
+                        'username' => $dataUser['username'],
+                        'role' => $dataUser['role'],
+                        'isLoggedIn' => TRUE
+                    ]);
+
+                    return redirect()->to(base_url('/'));
+                } else {
+                    session()->setFlashdata('failed', 'Kombinasi Username & Password Salah');
+                    return redirect()->back();
+                }
+            } else {
+                session()->setFlashdata('failed', 'Username Tidak Ditemukan');
+                return redirect()->back();
+            }
+        } else {
+            session()->setFlashdata('failed', $this->validator->listErrors());
+            return redirect()->back();
+        }
+    }
+
+    return view('v_login');
+    }
+
+// Create, Read, Update and Delete
+65. tambahkan code untuk routes milik produk 
+    $routes->post('/produk', 'ProdukController::create', ['filter' => 'auth']);
+    $routes->post('/produk/edit/(:any)', 'ProdukController::edit/$1', ['filter' => 'auth']);
+    $routes->get('/produk/delete/(:any)', 'ProdukController::delete/$1', ['filter' => 'auth']);
+
+66. buka ProdukController.php lalu edit pada isinya dengan 
+    protected $product; 
+
+    function __construct()
+    {
+        $this->product = new ProductModel();
+    } 
+
+		/*
+    fungsi dibawah ini yang bertanggung jawab untuk
+    menangani request dari http://localhost:8080/produk/edit/23
+    */
+    public function edit($id)
+    {
+		    //pada fungsi harus diberi variable untuk menerima value dari parameter
+		    //contohnya menggunakan variable $id
+		    
+		    $dataForm = [
+            'nama' => $this->request->getPost('nama'),
+            'harga' => $this->request->getPost('harga'),
+            'jumlah' => $this->request->getPost('jumlah'),
+            'updated_at' => date("Y-m-d H:i:s")
+        ];
+        
+        $this->product->update($id, $dataForm);
+    }  
+
+67. buka routes.php lalu kelompokkan routes milik produk menjadii 
+    $routes->group('produk', ['filter' => 'auth'], function ($routes) { 
+    $routes->get('', 'ProdukController::Produk');
+    $routes->post('', 'ProdukController::create');
+    $routes->post('edit/(:any)', 'ProdukController::edit/$1');
+    $routes->get('delete/(:any)', 'ProdukController::delete/$1');
+});
+
+68. buka ProdukController.php lalu tambahkan code dibawah function __construct
+    public function Produk()
+    {
+        $product = $this->product->findAll();
+        $data['product'] = $product;
+
+        return view('v_produk', $data);
+    }
+
+69. buka file v_produk lalu edit : 
+    - ganti isinya dengan 
+        <!-- Table with stripped rows -->
+        <table class="table datatable">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Nama</th>
+                    <th scope="col">Harga</th>
+                    <th scope="col">Jumlah</th>
+                    <th scope="col">Foto</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($product as $index => $produk) : ?>
+                    <tr>
+                        <th scope="row"><?php echo $index + 1 ?></th>
+                        <td><?php echo $produk['nama'] ?></td>
+                        <td><?php echo $produk['harga'] ?></td>
+                        <td><?php echo $produk['jumlah'] ?></td>
+                        <td>
+                            <?php if ($produk['foto'] != '' and file_exists("img/" . $produk['foto'] . "")) : ?>
+                                <img src="<?php echo base_url() . "img/" . $produk['foto'] ?>" width="100px">
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            aksi
+                        </td>
+                    </tr>
+                <?php endforeach ?>
+            </tbody>
+        </table>
+        <!-- End Table with stripped rows -->
+
+    - letakkan sebelum code tabel (yang baru dibuat diatas) 
+        <?php
+        if (session()->getFlashData('success')) {
+        ?>
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <?= session()->getFlashData('success') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php
+        }
+        ?>
+        <?php
+        if (session()->getFlashData('failed')) {
+        ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <?= session()->getFlashData('failed') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php
+        }
+        ?>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+            Tambah Data
+        </button>
+
+    - letakkan (code untuk menambahkan data) setelah code tabel (yang baru dibuat diatas)
+
+        <!-- Add Modal Begin -->
+        <div class="modal fade" id="addModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Data</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="<?= base_url('produk') ?>" method="post" enctype="multipart/form-data">
+                        <?= csrf_field(); ?>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="name">Nama</label>
+                                <input type="text" name="nama" class="form-control" id="nama" placeholder="Nama Barang" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Harga</label>
+                                <input type="text" name="harga" class="form-control" id="harga" placeholder="Harga Barang" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Jumlah</label>
+                                <input type="text" name="jumlah" class="form-control" id="jumlah" placeholder="Jumlah Barang" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Foto</label>
+                                <input type="file" class="form-control" id="foto" name="foto">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Add Modal End -->
+
+70. buka ProdukController.php lalu edit :
+    - tambahkan dibawah fungsi/method Produk
+        public function create()
+        {
+            $dataFoto = $this->request->getFile('foto');
+
+            $dataForm = [
+                'nama' => $this->request->getPost('nama'),
+                'harga' => $this->request->getPost('harga'),
+                'jumlah' => $this->request->getPost('jumlah'),
+                'created_at' => date("Y-m-d H:i:s")
+            ];
+
+            if ($dataFoto->isValid()) {
+                $fileName = $dataFoto->getRandomName();
+                $dataForm['foto'] = $fileName;
+                $dataFoto->move('img/', $fileName);
+            }
+
+            $this->product->insert($dataForm);
+
+            return redirect('produk')->with('success', 'Data Berhasil Ditambah');
+        } 
+
+71. buka file v_produk lalu edit :
+    - cari kata aksi lalu diganti dengan code 
+         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editModal-<?= $produk['id'] ?>">
+            Ubah
+        </button>
+        <a href="<?= base_url('produk/delete/' . $produk['id']) ?>" class="btn btn-danger" onclick="return confirm('Yakin hapus data ini ?')">
+            Hapus
+        </a>
+
+    - cari baris "<?php endforeach ?>" lalu sebelum baris tersebut tambahkan code 
+        <!-- Edit Modal Begin -->
+        <div class="modal fade" id="editModal-<?= $produk['id'] ?>" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Data</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="<?= base_url('produk/edit/' . $produk['id']) ?>" method="post" enctype="multipart/form-data">
+                        <?= csrf_field(); ?>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="name">Nama</label>
+                                <input type="text" name="nama" class="form-control" id="nama" value="<?= $produk['nama'] ?>" placeholder="Nama Barang" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Harga</label>
+                                <input type="text" name="harga" class="form-control" id="harga" value="<?= $produk['harga'] ?>" placeholder="Harga Barang" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Jumlah</label>
+                                <input type="text" name="jumlah" class="form-control" id="jumlah" value="<?= $produk['jumlah'] ?>" placeholder="Jumlah Barang" required>
+                            </div>
+                            <img src="<?php echo base_url() . "img/" . $produk['foto'] ?>" width="100px">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check" name="check" value="1">
+                                <label class="form-check-label" for="check">
+                                    Ceklis jika ingin mengganti foto
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Foto</label>
+                                <input type="file" class="form-control" id="foto" name="foto">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Modal End -->
+
+72. buka file ProdukController.php lalu dibagian fungsi edit lakukan 
+    - tambahkan 
+        $dataProduk = $this->product->find($id);
+
+    - ubah mulai dari $dataForm dengan 
+            $dataForm = [
+            'nama' => $this->request->getPost('nama'),
+            'harga' => $this->request->getPost('harga'),
+            'jumlah' => $this->request->getPost('jumlah'),
+            'updated_at' => date("Y-m-d H:i:s")
+        ];
+
+        if ($this->request->getPost('check') == 1) {
+            if ($dataProduk['foto'] != '' and file_exists("img/" . $dataProduk['foto'] . "")) {
+                unlink("img/" . $dataProduk['foto']);
+            }
+
+            $dataFoto = $this->request->getFile('foto');
+
+            if ($dataFoto->isValid()) {
+                $fileName = $dataFoto->getRandomName();
+                $dataFoto->move('img/', $fileName);
+                $dataForm['foto'] = $fileName;
+            }
+        }
+
+        $this->product->update($id, $dataForm);
+
+        return redirect('produk')->with('success', 'Data Berhasil Diubah');
+    }
+
+    public function delete($id)
+    {
+        $dataProduk = $this->product->find($id);
+
+        if ($dataProduk['foto'] != '' and file_exists("img/" . $dataProduk['foto'] . "")) {
+            unlink("img/" . $dataProduk['foto']);
+        }
+
+        $this->product->delete($id);
+
+        return redirect('produk')->with('success', 'Data Berhasil Dihapus');
+    }
+
+// library
+   A. Dompdf 
+73. download library dompdf dengan :
+    composer require dompdf/dompdf
+    // karena library tersebut untuk menjadikan jadi sebuah file (pdf) maka ubah routenya dengan 
+
+74. menambahkan routes sesuai dengan yang dibutuhkan, misalnya
+    $routes->get('download', 'ProdukController::download');
+
+75. buka ProdukController.php, lalu tambahkan code dibawah function delete
+    -   public function download()
+        {
+                //get data from database
+            $product = $this->product->findAll();
+
+                //pass data to file view
+            $html = view('v_produkPDF', ['product' => $product]);
+
+                //set the pdf filename
+            $filename = date('y-m-d-H-i-s') . '-produk';
+
+            // instantiate and use the dompdf class
+            $dompdf = new Dompdf();
+
+            // load HTML content (file view)
+            $dompdf->loadHtml($html);
+
+            // (optional) setup the paper size and orientation
+            $dompdf->setPaper('A4', 'potrait');
+
+            // render html as PDF
+            $dompdf->render();
+
+            // output the generated pdf
+            $dompdf->stream($filename);
+        }
+
+    - panggil dompdfnya di ProdukController.phpnya dibawah function delete, dengan cara :
+      use Dompdf\Dompdf;
+    
+76. buat file vProdukPDF.php dengan code :
+    <h1>Data Produk</h1>
+
+    <table border="1" width="100%" cellpadding="5">
+        <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>Harga</th>
+            <th>Jumlah</th>
+            <th>Foto</th>
+        </tr>
+
+        <?php
+        $no = 1;
+        foreach ($product as $index => $produk) :
+            $path = "../public/img/" . $produk['foto'];
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+        ?>
+            <tr>
+                <td align="center"><?= $index + 1 ?></td>
+                <td><?= $produk['nama'] ?></td>
+                <td align="right"><?= "Rp " . number_format($produk['harga'], 2, ",", ".") ?></td>
+                <td align="center"><?= $produk['jumlah'] ?></td>
+                <td align="center">
+                    <img src="<?= $base64 ?>" width="50px">
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+    Downloaded on <?= date("Y-m-d H:i:s") ?>
+
+77. buka file v_produk.php, tambahkan code dibawah button tambah data
+    - <a type="button" class="btn btn-success" href="<?= base_url() ?> produk/download">
+      Download data
+      </a>
+    
+    B. Cart
+78. install libarary cart via terminal dengan :
+    composer require jason-napolitano/codeigniter4-cart-module
+
+79. buka file Autoload.php lalu tambahkan code di dalam variable $psr4 :
+    - 'CodeIgniterCart' => ROOTPATH . 'vendor/jason-napolitano/codeigniter4-cart-module/src'
+
+80. buka routes lalu ganti routes milik keranjang dengan code : 
+    -  $routes->group('keranjang', ['filter' => 'auth'], function ($routes) {
+            $routes->get('', 'TransaksiController::Keranjang');
+            $routes->post('', 'TransaksiController::cart_add');
+            $routes->post('edit', 'TransaksiController::cart_edit');
+            $routes->get('delete/(:any)', 'TransaksiController::cart_delete/$1');
+            $routes->get('clear', 'TransaksiController::cart_clear');
+       });
+
+81. buka TransaksiController.php lalu ubah isinya dengan :
+    -   protected $cart;
+
+        function __construct()
+        {
+            helper('number');
+            helper('form');
+            $this->cart = \Config\Services::cart();
+        }
+        
+        public function Keranjang()
+        {
+            $data['items'] = $this->cart->contents();
+            $data['total'] = $this->cart->total();
+            return view('v_keranjang', $data);
+        }
+
+        public function cart_add()
+        {
+            $this->cart->insert(array(
+                'id'        => $this->request->getPost('id'),
+                'qty'       => 1,
+                'price'     => $this->request->getPost('harga'),
+                'name'      => $this->request->getPost('nama'),
+                'options'   => array('foto' => $this->request->getPost('foto'))
+            ));
+            session()->setflashdata('success', 'Produk berhasil ditambahkan ke keranjang. (<a href="' . base_url() . 'keranjang">Lihat</a>)');
+            return redirect()->to(base_url('/'));
+        }
+
+        public function cart_clear()
+        {
+            $this->cart->destroy();
+            session()->setflashdata('success', 'Keranjang Berhasil Dikosongkan');
+            return redirect()->to(base_url('keranjang'));
+        }
+
+        public function cart_edit()
+        {
+            $i = 1;
+            foreach ($this->cart->contents() as $value) {
+                $this->cart->update(array(
+                    'rowid' => $value['rowid'],
+                    'qty'   => $this->request->getPost('qty' . $i++)
+                ));
+            }
+
+            session()->setflashdata('success', 'Keranjang Berhasil Diedit');
+            return redirect()->to(base_url('keranjang'));
+        }
+
+        public function cart_delete($rowid)
+        {
+            $this->cart->remove($rowid);
+            session()->setflashdata('success', 'Keranjang Berhasil Dihapus');
+            return redirect()->to(base_url('keranjang'));
+        }
+
+82. buka file home.php lalu ubah construct dengan 
+    -   function __construct()
+        {
+            helper('form');
+            helper('number');
+            $this->product = new ProductModel();
+        }
+
+83. buka file v_home.php lalu ubah : 
+    - pada baris (diantara) dibawah <?= $this->section('content') ?> dan di atas <!-- Table with stripped rows --> tambahkan
+        <?php
+        if (session()->getFlashData('success')) {
+        ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?= session()->getFlashData('success') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php
+        }
+        ?>
+    - dibawah baris <div class="col-lg-6">, tambahkan 
+        <?= form_open('keranjang') ?>
+            <?php
+            echo form_hidden('id', $item['id']);
+            echo form_hidden('nama', $item['nama']);
+            echo form_hidden('harga', $item['harga']);
+            echo form_hidden('foto', $item['foto']); 
+            ?>
+    - dibawah <h5 class="card-title"><?php echo $item['nama'] ?><br><?php echo $item['harga'] ?></h5>, tambahkan 
+        <button type="submit" class="btn btn-info rounded-pill">Beli</button>
+
+84. buka file v_keranjang.php lalu ubah semua dengan 
+    <?= $this->extend('layout') ?>
+    <?= $this->section('content') ?>
+    <?php
+    if (session()->getFlashData('success')) {
+    ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session()->getFlashData('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php
+    }
+    ?>
+    <?php echo form_open('keranjang/edit') ?>
+    <!-- Table with stripped rows -->
+    <table class="table datatable">
+        <thead>
+            <tr>
+                <th scope="col">Nama</th>
+                <th scope="col">Foto</th>
+                <th scope="col">Harga</th>
+                <th scope="col">Jumlah</th>
+                <th scope="col">Subtotal</th>
+                <th scope="col">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $i = 1;
+            if (!empty($items)) :
+                foreach ($items as $index => $item) :
+            ?>
+                    <tr>
+                        <td><?php echo $item['name'] ?></td>
+                        <td><img src="<?php echo base_url() . "img/" . $item['options']['foto'] ?>" width="100px"></td>
+                        <td><?php echo number_to_currency($item['price'], 'IDR') ?></td>
+                        <td><input type="number" min="1" name="qty<?php echo $i++ ?>" class="form-control" value="<?php echo $item['qty'] ?>"></td>
+                        <td><?php echo number_to_currency($item['subtotal'], 'IDR') ?></td>
+                        <td>
+                            <a href="<?php echo base_url('keranjang/delete/' . $item['rowid'] . '') ?>" class="btn btn-danger"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+            <?php
+                endforeach;
+            endif;
+            ?>
+        </tbody>
+    </table>
+    <!-- End Table with stripped rows -->
+    <div class="alert alert-info">
+        <?php echo "Total = " . number_to_currency($total, 'IDR') ?>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Perbarui Keranjang</button>
+    <a class="btn btn-warning" href="<?php echo base_url() ?>keranjang/clear">Kosongkan Keranjang</a>
+    <?php echo form_close() ?>
+    <?= $this->endSection() ?>
