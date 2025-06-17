@@ -1199,4 +1199,350 @@
 
 88. ikuti tutorial yang membahas postman pada file codeigniter4_-_WebService_Client.pdf
 
-89. 
+89. tambahkan code (untuk tombol checkout disebelah tampilan tombol 'kosongkan keranjang') :
+    <?php if (!empty($items)) : ?>
+        <a class="btn btn-success" href="<?php echo base_url() ?>checkout">Selesai Belanja</a>
+    <?php endif; ?>
+
+90. buka routes.php lalu tambahkan :
+    $routes->get('checkout', 'TransaksiController::checkout', ['filter' => 'auth']);
+
+91. buka TransaksiController.php lalu tambahkan : 
+    public function checkout()
+    {
+        $data['items'] = $this->cart->contents();
+        $data['total'] = $this->cart->total();
+
+        return view('v_checkout', $data);
+    }
+
+92. buka folder views lalu buat file dengan nama v_checkout.php
+    <?= $this->extend('layout') ?>
+    <?= $this->section('content') ?>
+    <div class="row">
+        <div class="col-lg-6">
+            <!-- Vertical Form -->
+            <?= form_open('buy', 'class="row g-3"') ?>
+            <?= form_hidden('username', session()->get('username')) ?>
+            <?= form_input(['type' => 'hidden', 'name' => 'total_harga', 'id' => 'total_harga', 'value' => '']) ?>
+            <div class="col-12">
+                <label for="nama" class="form-label">Nama</label>
+                <input type="text" class="form-control" id="nama" value="<?php echo session()->get('username'); ?>">
+            </div>
+            <div class="col-12">
+                <label for="alamat" class="form-label">Alamat</label>
+                <input type="text" class="form-control" id="alamat" name="alamat">
+            </div> 
+            <div class="col-12">
+                <label for="kelurahan" class="form-label">Kelurahan</label>
+                <strong>select kelurahan</strong>
+            </div>
+            <div class="col-12">
+                <label for="layanan" class="form-label">Layanan</label>
+                <strong>select layanan</strong>
+            </div>
+            <div class="col-12">
+                <label for="ongkir" class="form-label">Ongkir</label>
+                <input type="text" class="form-control" id="ongkir" name="ongkir" readonly>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <!-- Vertical Form -->
+            <div class="col-12">
+                <!-- Default Table -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nama</th>
+                            <th scope="col">Harga</th>
+                            <th scope="col">Jumlah</th>
+                            <th scope="col">Sub Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $i = 1;
+                        if (!empty($items)) :
+                            foreach ($items as $index => $item) :
+                        ?>
+                                <tr>
+                                    <td><?php echo $item['name'] ?></td>
+                                    <td><?php echo number_to_currency($item['price'], 'IDR') ?></td>
+                                    <td><?php echo $item['qty'] ?></td>
+                                    <td><?php echo number_to_currency($item['price'] * $item['qty'], 'IDR') ?></td>
+                                </tr>
+                        <?php
+                            endforeach;
+                        endif;
+                        ?>
+                        <tr>
+                            <td colspan="2"></td>
+                            <td>Subtotal</td>
+                            <td><?php echo number_to_currency($total, 'IDR') ?></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"></td>
+                            <td>Total</td>
+                            <td><span id="total"><?php echo number_to_currency($total, 'IDR') ?></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- End Default Table Example -->
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Buat Pesanan</button>
+            </div>
+            </form><!-- Vertical Form -->
+        </div>
+    </div>
+    <?= $this->endSection() ?>
+
+93. buka file .env lalu tambahkan code dipaling akhir
+    #--------------------------------------------------------------------
+    # RAJAONGKIR API
+    #--------------------------------------------------------------------
+
+    COST_KEY = "EFiYFZry4b4cc56b2de4137bMZivIAKG
+
+94. buka terminal lalu lakukan install library guzzle dengan :
+    composer require guzzle http/guzzle
+
+95. buka routes.php lalu tambahkan dua routes baru untuk akses 2 endpoint yang sudah dicoba pada postman
+    $routes->get('get-location', 'TransaksiController::getLocation', ['filter' => 'auth']);
+    $routes->get('get-cost', 'TransaksiController::getCost', ['filter' => 'auth']);
+
+96. buka TransaksiController.php lalu tambahkan
+    - dibaris awal 
+        use GuzzleHttp\Client;
+
+    - inisialisasi dalam class TransaksiController
+        $this->client = new \GuzzleHttp\Client();
+        $this->apiKey = env('COST_KEY');
+        
+    - dua code berikut ke dalam fungsi __construct:
+        $this->client = new \GuzzleHttp\Client();
+        $this->apiKey = env('COST_KEY');
+    
+    - dua fungsi baru dibawah fungsi checkout :
+        public function getLocation()
+        {
+                //keyword pencarian yang dikirimkan dari halaman checkout
+            $search = $this->request->getGet('search');
+
+            $response = $this->client->request(
+                'GET', 
+                'https://rajaongkir.komerce.id/api/v1/destination/domestic-destination?search='.$search.'&limit=50', [
+                    'headers' => [
+                        'accept' => 'application/json',
+                        'key' => $this->apiKey,
+                    ],
+                ]
+            );
+
+            $body = json_decode($response->getBody(), true); 
+            return $this->response->setJSON($body['data']);
+        }
+
+        public function getCost()
+        { 
+                //ID lokasi yang dikirimkan dari halaman checkout
+            $destination = $this->request->getGet('destination');
+
+                //parameter daerah asal pengiriman, berat produk, dan kurir dibuat statis
+            //valuenya => 64999 : PEDURUNGAN TENGAH , 1000 gram, dan JNE
+            $response = $this->client->request(
+                'POST', 
+                'https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost', [
+                    'multipart' => [
+                        [
+                            'name' => 'origin',
+                            'contents' => '64999'
+                        ],
+                        [
+                            'name' => 'destination',
+                            'contents' => $destination
+                        ],
+                        [
+                            'name' => 'weight',
+                            'contents' => '1000'
+                        ],
+                        [
+                            'name' => 'courier',
+                            'contents' => 'jne'
+                        ]
+                    ],
+                    'headers' => [
+                        'accept' => 'application/json',
+                        'key' => $this->apiKey,
+                    ],
+                ]
+            );
+
+            $body = json_decode($response->getBody(), true); 
+            return $this->response->setJSON($body['data']);
+        }
+
+// additional link :
+    https://select2.org/
+97. buka file layout.php lalu tambahkan code 
+    - diatas vendor jas files
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <!-- Select2 -->
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    - diatas tag penutup body 
+        <?= $this->renderSection('script') ?> 
+
+98. buka v_checkout.php lalu tambahkan code 
+    - pada div milik kelurahan (ganti code yang strong) 
+        <select class="form-control" id="kelurahan" name="kelurahan" required></select>
+    
+    - pada div milik layanan (ganti code yang strong)
+        <select class="form-control" id="layanan" name="layanan" required></select>
+    
+    - dibawah end section 
+        <?= $this->section('script') ?>
+        <script>
+        $(document).ready(function() {
+            var ongkir = 0;
+            var total = 0; 
+            hitungTotal();
+
+            function hitungTotal() {
+                total = ongkir + <?= $total ?>;
+
+                $("#ongkir").val(ongkir);
+                $("#total").html("IDR " + total.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+                $("#total_harga").val(total);
+            }
+        });
+        </script>
+        <?= $this->endSection() ?>
+
+    - dibawah hitungtotal();
+        // untuk menampilkan list lokasi
+        $('#kelurahan').select2({
+            placeholder: 'Ketik nama kelurahan...',
+            ajax: {
+                url: '<?= base_url('get-location') ?>',
+                dataType: 'json',
+                delay: 1500,
+                data: function (params) {
+                    return {
+                        search: params.term
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.map(function(item) {
+                        return {
+                            id: item.id,
+                            text: item.subdistrict_name + ", " + item.district_name + ", " + item.city_name + ", " + item.province_name + ", " + item.zip_code
+                        };
+                        })
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 3
+        });
+
+        // untuk menampilkan harga
+        $("#kelurahan").on('change', function() {
+            var id_kelurahan = $(this).val(); 
+            $("#layanan").empty();
+            ongkir = 0;
+
+            $.ajax({
+                url: "<?= site_url('get-cost') ?>",
+                type: 'GET',
+                data: { 
+                    'destination': id_kelurahan, 
+                },
+                dataType: 'json',
+                success: function(data) { 
+                    data.forEach(function(item) {
+                        var text = item["description"] + " (" + item["service"] + ") : estimasi " + item["etd"] + "";
+                        $("#layanan").append($('<option>', {
+                            value: item["cost"],
+                            text: text 
+                        }));
+                    });
+                    hitungTotal(); 
+                },
+            });
+        });
+        // untuk menampilkan harga
+        $("#layanan").on('change', function() {
+            ongkir = parseInt($(this).val());
+            hitungTotal();
+        });  
+
+99. Buat model baru 
+    - php spark make:model TransactionModel
+
+        - lalu ubah bagian allowedFields menjadi 
+        ['username', 'total_harga', 'alamat', 'ongkir', 'status', 'created_at', 'updated_at']
+
+    - php spark make:model TransactionDetailModel
+
+        - lalu ubah bagian allowedFields menjadi 
+        ['transaction_id', 'product_id', 'jumlah', 'diskon', 'subtotal_harga', 'created_at', 'updated_at']
+
+100. Buka TransaksiController.php lalu lakukan 
+    - tambahkan dibagian awal (bersama use yang lainnya)
+        use App\Models\TransactionModel;
+        use App\Models\TransactionDetailsModel; 
+
+    - inisialisasi dalam class TransaksiController
+        protected $transaction;
+        protected $transaction_detail;
+
+    - tambahkan pada method __construct
+        $this->transaction = new TransactionModel();
+        $this->transaction_detail = new TransactionDetailModel();
+
+101. buka file routes.php 
+    - tambahkan router buy
+        $routes->post('buy', 'TransaksiController::buy', ['filter' => 'auth']); 
+
+102. buka file TransaksiController.php lalu tambahkan method buy
+    public function buy()
+    {
+        if ($this->request->getPost()) { 
+            $dataForm = [
+                'username' => $this->request->getPost('username'),
+                'total_harga' => $this->request->getPost('total_harga'),
+                'alamat' => $this->request->getPost('alamat'),
+                'ongkir' => $this->request->getPost('ongkir'),
+                'status' => 0,
+                'created_at' => date("Y-m-d H:i:s"),
+                'updated_at' => date("Y-m-d H:i:s")
+            ];
+
+            $this->transaction->insert($dataForm);
+
+            $last_insert_id = $this->transaction->getInsertID();
+
+            foreach ($this->cart->contents() as $value) {
+                $dataFormDetail = [
+                    'transaction_id' => $last_insert_id,
+                    'product_id' => $value['id'],
+                    'jumlah' => $value['qty'],
+                    'diskon' => 0,
+                    'subtotal_harga' => $value['qty'] * $value['price'],
+                    'created_at' => date("Y-m-d H:i:s"),
+                    'updated_at' => date("Y-m-d H:i:s")
+                ];
+
+                $this->transaction_detail->insert($dataFormDetail);
+            }
+
+            $this->cart->destroy();
+    
+            return redirect()->to(base_url());
+        }
+    }
