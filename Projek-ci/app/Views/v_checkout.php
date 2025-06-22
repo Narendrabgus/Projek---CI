@@ -11,8 +11,8 @@
             <input type="text" class="form-control" id="nama" value="<?php echo session()->get('username'); ?>">
         </div>
         <div class="col-12">
-            <label for="alamat" class="form-label">Alamat</label>
-            <input type="text" class="form-control" id="alamat" name="alamat">
+            <label for="alamat" class="form-label" required>Alamat</label>
+            <input type="text" class="form-control" id="alamat" name="alamat" required >
         </div> 
         <div class="col-12">
             <label for="kelurahan" class="form-label">Kelurahan</label>
@@ -82,7 +82,7 @@
 <script>
     $(document).ready(function() {
         var ongkir = 0;
-        var total = 0; 
+        var totalHargaProduk = parseFloat(<?= $total ?? 0 ?>);
         hitungTotal();
 
         $('#kelurahan').select2({
@@ -114,35 +114,70 @@
     $("#kelurahan").on('change', function() {
         var id_kelurahan = $(this).val(); 
         $("#layanan").empty();
+        $("#layanan").append($('<option>', { 
+                value: '',
+                text: '--- Pilih Layanan ---'
+            }));
         ongkir = 0;
+        $("#ongkir").val('');
+        $("#total").html("IDR " + totalHargaProduk.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+        $("#total_harga").val(totalHargaProduk);
 
-        $.ajax({
-            url: "<?= site_url('get-cost') ?>",
-            type: 'GET',
-            data: { 
-                'destination': id_kelurahan, 
-            },
-            dataType: 'json',
-            success: function(data) { 
-                data.forEach(function(item) {
-                    var text = item["description"] + " (" + item["service"] + ") : estimasi " + item["etd"] + "";
-                    $("#layanan").append($('<option>', {
-                        value: item["cost"],
-                        text: text 
-                    }));
-                });
-                hitungTotal(); 
-            },
-        });
+        if (id_kelurahan) { // Hanya panggil AJAX jika kelurahan dipilih
+                $.ajax({
+                    url: "<?= site_url('get-cost') ?>",
+                    type: 'GET',
+                    data: { 
+                        'destination': id_kelurahan, 
+                        'weight': <?= $total_berat_barang ?? 0 ?> // Pastikan variabel ini tersedia
+                    },
+                    dataType: 'json',
+                    success: function(data) { 
+                        if (data.length > 0) {
+                            data.forEach(function(item) {
+                                var text = item["description"] + " (" + item["service"] + ") : estimasi " + item["etd"] + "";
+                                $("#layanan").append($('<option>', {
+                                    value: item["cost"],
+                                    text: text 
+                                }));
+                            });
+                        } else {
+                            $("#layanan").append($('<option>', {
+                                value: '',
+                                text: 'Tidak ada layanan tersedia'
+                            }));
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error("Error fetching cost:", textStatus, errorThrown);
+                        $("#layanan").empty().append($('<option>', {
+                            value: '',
+                            text: 'Gagal memuat layanan'
+                        }));
+                        $("#ongkir").val('Error');
+                        $("#total").html("Error");
+                        $("#total_harga").val(0);
+                    }
+                // hitungTotal(); 
+            });
+        }
     });
 
     $("#layanan").on('change', function() {
-        ongkir = parseInt($(this).val());
-        hitungTotal();
+        var selectedValue = $(this).val();
+            if (selectedValue !== '') {
+                ongkir = parseInt(selectedValue);
+                hitungTotal();
+            } else {
+                ongkir = 0;
+                $("#ongkir").val('');
+                $("#total").html("IDR " + totalHargaProduk.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+                $("#total_harga").val(totalHargaProduk);
+            }
     });  
 
         function hitungTotal() {
-            total = ongkir + <?= $total ?>;
+            total = ongkir + totalHargaProduk;
 
             $("#ongkir").val(ongkir);
             $("#total").html("IDR " + total.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));

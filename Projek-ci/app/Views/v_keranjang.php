@@ -18,6 +18,7 @@ if (session()->getFlashData('success')) {
             <th scope="col">Nama</th>
             <th scope="col">Foto</th>
             <th scope="col">Harga</th>
+            <th scope="col">Berat</th>
             <th scope="col">Jumlah</th>
             <th scope="col">Subtotal</th>
             <th scope="col">Aksi</th>
@@ -33,7 +34,8 @@ if (session()->getFlashData('success')) {
                     <td><?php echo $item['name'] ?></td>
                     <td><img src="<?php echo base_url() . "img/" . $item['options']['foto'] ?>" width="100px"></td>
                     <td><?php echo number_to_currency($item['price'], 'IDR') ?></td>
-                    <td><input type="number" min="1" name="qty<?php echo $i++ ?>" class="form-control" value="<?php echo $item['qty'] ?>"></td>
+                    <td><?php echo $item['options']['weight'] ?? 'N/A' ?> kg</td>
+                    <td><input type="number" min="1" name="qty<?php echo $i++ ?>" class="form-control" value="<?php echo $item['qty'] ?>" readyonly></td>
                     <td><?php echo number_to_currency($item['subtotal'], 'IDR') ?></td>
                     <td>
                         <a href="<?php echo base_url('keranjang/delete/' . $item['rowid'] . '') ?>" class="btn btn-danger"><i class="bi bi-trash"></i></a>
